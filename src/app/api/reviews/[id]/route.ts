@@ -1,0 +1,26 @@
+import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import { connectDB } from "@/lib/mongodb";
+import { Review } from "@/lib/models/Review";
+import { adminJsonResponse, isAdminSession } from "@/lib/admin-auth";
+
+type Params = { params: Promise<{ id: string }> };
+
+export async function DELETE(_request: Request, { params }: Params) {
+  if (!(await isAdminSession())) {
+    return adminJsonResponse("Unauthorized");
+  }
+  try {
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
+    await connectDB();
+    const doc = await Review.findByIdAndDelete(id);
+    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Failed to delete review" }, { status: 500 });
+  }
+}

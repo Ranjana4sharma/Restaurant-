@@ -1,0 +1,43 @@
+import mongoose, { Schema, type Model, type InferSchemaType } from "mongoose";
+
+const productVariantSchema = new Schema(
+  {
+    label: { type: String, required: true, trim: true },
+    price: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
+const productSchema = new Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    description: { type: String, default: "" },
+    price: { type: Number, required: true, min: 0 },
+    /** Links to Category — API returns current category name from this ref when set */
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
+    category: { type: String, required: true, trim: true },
+    image: { type: String, default: "" },
+    isVeg: { type: Boolean, default: true },
+    isFeatured: { type: Boolean, default: false },
+    isBestseller: { type: Boolean, default: false },
+    isChefSpecial: { type: Boolean, default: false },
+    isSignatureDish: { type: Boolean, default: false },
+    isFamousDish: { type: Boolean, default: false },
+    variants: { type: [productVariantSchema], default: [] },
+  },
+  { timestamps: true }
+);
+
+export type ProductDoc = InferSchemaType<typeof productSchema> & {
+  _id: mongoose.Types.ObjectId;
+};
+
+const modelName = "Product";
+
+export const Product: Model<ProductDoc> =
+  mongoose.models[modelName] ??
+  mongoose.model<ProductDoc>(modelName, productSchema);
