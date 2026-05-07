@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { fetchProducts } from "@/services/products";
 import { fetchCategories } from "@/services/categories";
 import { fetchApprovedReviews } from "@/services/reviews";
@@ -140,7 +140,7 @@ import { CheckoutDetailsModal } from "@/components/modals/CheckoutDetailsModal";
 import ReservationModal from "@/components/modals/ReservationModal";
 import { Footer } from "@/components/layout/Footer";
 
-export default function HomePage() {
+function HomeContent() {
   const router = useRouter();
   const [products, setProducts] = useState<ProductDTO[]>([]);
   const searchParams = useSearchParams();
@@ -994,5 +994,21 @@ export default function HomePage() {
         onClose={() => setReservationOpen(false)}
       />
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#070707] flex flex-col items-center justify-center gap-4">
+        <div className="relative h-20 w-20">
+          <div className="absolute inset-0 rounded-full border-2 border-[#d5b16a]/20"></div>
+          <div className="absolute inset-0 rounded-full border-t-2 border-[#d5b16a] animate-spin"></div>
+        </div>
+        <p className="font-serif text-[#f5d79e] animate-pulse">Preparing the Royal Experience...</p>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
