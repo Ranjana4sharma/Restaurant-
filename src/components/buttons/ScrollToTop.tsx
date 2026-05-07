@@ -32,7 +32,7 @@ export function ScrollToTop() {
     <button
       type="button"
       onClick={goTop}
-      className={`fixed right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#E30000] text-white shadow-[0_4px_20px_rgba(227,0,0,0.55),0_2px_8px_rgba(0,0,0,0.12)] transition hover:scale-105 hover:shadow-[0_6px_28px_rgba(227,0,0,0.6)] active:scale-95 sm:right-6 sm:h-14 sm:w-14 ${
+      className={`fixed right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#d5b16a] text-black shadow-[0_8px_30px_rgba(213,177,106,0.3)] transition hover:scale-105 hover:brightness-110 active:scale-95 sm:right-6 sm:h-14 sm:w-14 ${
         cartOpen
           ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-32"
           : "bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:bottom-8"

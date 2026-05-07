@@ -132,8 +132,8 @@ export async function PUT(request: Request) {
     const experienceCards = normalizeTriplet(body.experienceCards);
     const landingGalleryImages = Array.isArray(body.landingGalleryImages)
       ? body.landingGalleryImages
-          .map((x) => (typeof x === "string" ? x.trim() : ""))
-          .filter((x) => x.length > 0)
+          .map((x: unknown) => (typeof x === "string" ? x.trim() : ""))
+          .filter((x: string) => x.length > 0)
           .slice(0, 12)
       : [];
 
@@ -155,7 +155,7 @@ export async function PUT(request: Request) {
           landingGalleryImages,
         },
       },
-      { upsert: true, new: true, runValidators: true }
+      { upsert: true, returnDocument: "after", runValidators: true }
     );
     return NextResponse.json({
       ok: true,

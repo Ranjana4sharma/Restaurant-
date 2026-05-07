@@ -11,8 +11,8 @@ export async function GET() {
 
   try {
     await connectDB();
-    // Use phone number from session to fetch all reservations (linked by identity)
-    const reservations = await Reservation.find({ phone: session.phone })
+    // Use email from session to fetch all reservations (stored in phone field)
+    const reservations = await Reservation.find({ phone: session.email })
       .sort({ createdAt: -1 })
       .lean();
 

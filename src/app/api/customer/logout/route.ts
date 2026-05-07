@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { CUSTOMER_TOKEN_COOKIE } from "@/lib/customer-constants";
 
 export async function POST() {
+  console.log("Logout API route hit");
   const response = NextResponse.json({ ok: true });
   
   // Clear the cookie

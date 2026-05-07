@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Calendar, Clock, Users, Phone, User, CheckCircle } from "lucide-react";
+import { X, Calendar, Clock, Users, Mail, User, CheckCircle } from "lucide-react";
 
 interface ReservationModalProps {
   isOpen: boolean;
@@ -11,26 +11,54 @@ interface ReservationModalProps {
 export default function ReservationModal({ isOpen, onClose }: ReservationModalProps) {
   const [form, setForm] = useState({
     fullName: "",
-    phone: "",
+    email: "",
     guests: 2,
     reservationDate: "",
     reservationTime: "",
   });
   const [loading, setLoading] = useState(false);
-  const [trackId, setTrackId] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, email: e.target.value });
+    if (emailError) {
+      setEmailError("");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateEmail(form.email)) return;
+
     setLoading(true);
     try {
+      const payload = {
+        fullName: form.fullName,
+        phone: form.email, // Send email in the phone field to avoid backend API changes
+        guests: form.guests,
+        reservationDate: form.reservationDate,
+        reservationTime: form.reservationTime,
+      };
+
       const res = await fetch("/api/reservations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok) {
-        setTrackId(data.trackId);
+        setIsSuccess(true);
       } else {
         alert(data.error || "Failed to book");
       }
@@ -50,24 +78,25 @@ export default function ReservationModal({ isOpen, onClose }: ReservationModalPr
           <X size={24} />
         </button>
 
-        {trackId ? (
-          <div className="py-10 text-center animate-[fadeUp_0.4s_ease-out]">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
-              <CheckCircle size={40} />
+        {isSuccess ? (
+          <div className="py-6 text-center animate-in zoom-in-95 duration-500">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] p-10 mb-8">
+              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                <CheckCircle size={48} strokeWidth={2.5} />
+              </div>
+              <h2 className="font-serif text-4xl text-emerald-400 mb-4">Request Submitted</h2>
+              <p className="text-[#f3e8c7]/80 text-lg font-medium">Your royal table is being prepared.</p>
             </div>
-            <h2 className="font-serif text-3xl text-[#f5d79e]">Request Submitted</h2>
-            <p className="mt-4 text-[#f3e8c7]/60 leading-relaxed">
-              Your royal table request has been received. We will notify you once it's approved.
+
+            <p className="text-[#f3e8c7]/60 leading-relaxed max-w-sm mx-auto">
+              Thank you! Your reservation request has been received.<br />
+              A confirmation will be sent to your royal email shortly.
             </p>
-            <div className="mt-8 rounded-2xl bg-[#d5b16a]/10 p-6 border border-[#d5b16a]/20">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-[#d5b16a] mb-1">Track ID</p>
-              <p className="font-serif text-4xl text-[#f5d79e] tracking-widest">{trackId}</p>
-            </div>
-            <button 
+            <button
               onClick={onClose}
-              className="mt-10 w-full rounded-2xl bg-[#d5b16a] py-4 text-xs font-bold uppercase tracking-[0.2em] text-black shadow-lg shadow-[#d5b16a]/20"
+              className="mt-10 w-full rounded-full bg-[#d5b16a] py-5 text-[11px] font-black uppercase tracking-[0.3em] text-black shadow-xl shadow-[#d5b16a]/20 transition-transform active:scale-95"
             >
-              Close Window
+              Back to Menu
             </button>
           </div>
         ) : (
@@ -81,42 +110,43 @@ export default function ReservationModal({ isOpen, onClose }: ReservationModalPr
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="col-span-2">
                   <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#d5b16a]/60 mb-2">
-                    <User size={12} /> Full Name
+                    <User size={12} /> Name
                   </label>
-                  <input 
+                  <input
                     required
                     value={form.fullName}
-                    onChange={e => setForm({...form, fullName: e.target.value})}
+                    onChange={e => setForm({ ...form, fullName: e.target.value })}
                     placeholder="e.g. Maharajah Singh"
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white outline-none focus:border-[#d5b16a]/40"
+                    className="w-full rounded-2xl border border-[#d5b16a]/20 bg-white/5 p-4 text-sm text-[#f3e8c7] outline-none focus:border-[#d5b16a]"
                   />
                 </div>
-                
+
                 <div className="col-span-2">
                   <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#d5b16a]/60 mb-2">
-                    <Phone size={12} /> Phone Number
+                    <Mail size={12} /> Email
                   </label>
-                  <input 
+                  <input
                     required
-                    type="tel"
-                    value={form.phone}
-                    onChange={e => setForm({...form, phone: e.target.value})}
-                    placeholder="e.g. 9876543210"
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white outline-none focus:border-[#d5b16a]/40"
+                    type="email"
+                    value={form.email}
+                    onChange={handleEmailChange}
+                    placeholder="e.g. example@email.com"
+                    className="w-full rounded-2xl border border-[#d5b16a]/20 bg-white/5 p-4 text-sm text-[#f3e8c7] outline-none focus:border-[#d5b16a]"
                   />
+                  {emailError && <p className="text-xs text-rose-400 mt-1 ml-1">{emailError}</p>}
                 </div>
 
                 <div>
                   <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#d5b16a]/60 mb-2">
                     <Calendar size={12} /> Date
                   </label>
-                  <input 
+                  <input
                     required
                     type="date"
                     min={new Date().toISOString().split('T')[0]}
                     value={form.reservationDate}
-                    onChange={e => setForm({...form, reservationDate: e.target.value})}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white outline-none focus:border-[#d5b16a]/40 [color-scheme:dark]"
+                    onChange={e => setForm({ ...form, reservationDate: e.target.value })}
+                    className="w-full rounded-2xl border border-[#d5b16a]/20 bg-white/5 p-4 text-sm text-[#f3e8c7] outline-none focus:border-[#d5b16a] [color-scheme:dark]"
                   />
                 </div>
 
@@ -124,12 +154,12 @@ export default function ReservationModal({ isOpen, onClose }: ReservationModalPr
                   <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#d5b16a]/60 mb-2">
                     <Clock size={12} /> Time
                   </label>
-                  <input 
+                  <input
                     required
                     type="time"
                     value={form.reservationTime}
-                    onChange={e => setForm({...form, reservationTime: e.target.value})}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white outline-none focus:border-[#d5b16a]/40 [color-scheme:dark]"
+                    onChange={e => setForm({ ...form, reservationTime: e.target.value })}
+                    className="w-full rounded-2xl border border-[#d5b16a]/20 bg-white/5 p-4 text-sm text-[#f3e8c7] outline-none focus:border-[#d5b16a] [color-scheme:dark]"
                   />
                 </div>
 
@@ -137,19 +167,19 @@ export default function ReservationModal({ isOpen, onClose }: ReservationModalPr
                   <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#d5b16a]/60 mb-2">
                     <Users size={12} /> Number of Guests
                   </label>
-                  <select 
+                  <select
                     value={form.guests}
-                    onChange={e => setForm({...form, guests: Number(e.target.value)})}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white outline-none focus:border-[#d5b16a]/40"
+                    onChange={e => setForm({ ...form, guests: Number(e.target.value) })}
+                    className="w-full rounded-2xl border border-[#d5b16a]/20 bg-white/5 p-4 text-sm text-[#f3e8c7] outline-none focus:border-[#d5b16a]"
                   >
-                    {[1,2,3,4,5,6,8,10,12,15,20].map(n => (
-                      <option key={n} value={n} className="bg-[#111]">{n} {n===1?'Guest':'Guests'}</option>
+                    {[1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20].map(n => (
+                      <option key={n} value={n} className="bg-[#111]">{n} {n === 1 ? 'Guest' : 'Guests'}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading}
                 className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#b38a46] to-[#d5b16a] py-5 text-[11px] font-black uppercase tracking-[0.3em] text-black shadow-xl shadow-[#d5b16a]/20 transition-transform active:scale-95"

@@ -68,7 +68,7 @@ async function migrateIfNeeded(): Promise<void> {
   await NavbarSettings.findOneAndUpdate(
     { key: KEY },
     { $set: { logoUrl, brand, tagline, phone } },
-    { upsert: true, new: true, runValidators: true }
+    { upsert: true, returnDocument: "after", runValidators: true }
   );
   await SiteSettings.updateOne(
     { key: KEY },
@@ -120,7 +120,7 @@ export async function PUT(request: Request) {
     await NavbarSettings.findOneAndUpdate(
       { key: KEY },
       { $set: { logoUrl, brand, tagline, phone } },
-      { upsert: true, new: true, runValidators: true }
+      { upsert: true, returnDocument: "after", runValidators: true }
     );
     return NextResponse.json({
       ok: true,

@@ -91,7 +91,7 @@ export async function PUT(request: Request) {
       patch.rating = rating;
     }
     const doc = await Review.findByIdAndUpdate(id, patch, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });

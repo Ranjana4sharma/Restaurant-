@@ -49,7 +49,7 @@ export async function PUT(request: Request, { params }: Params) {
     const oldName = existing.name;
 
     const doc = await Category.findByIdAndUpdate(id, patch, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });

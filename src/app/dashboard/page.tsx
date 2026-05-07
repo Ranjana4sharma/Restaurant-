@@ -43,21 +43,25 @@ export default function DashboardPage() {
 
         if (dashRes.ok) {
           const data = await dashRes.json();
-          setOrders(data.orders || []);
-          setDashboardData(data);
-          setEditForm({
-            name: data.profile.name || "",
-            address: data.profile.address || "",
-            email: data.profile.email || "",
-            gender: data.profile.gender || "",
-            birthDate: data.profile.birthDate || "",
-          });
+          if (data.profile) {
+            setOrders(data.orders || []);
+            setDashboardData(data);
+            setEditForm({
+              name: data.profile.name || "",
+              address: data.profile.address || "",
+              email: data.profile.email || "",
+              gender: data.profile.gender || "",
+              birthDate: data.profile.birthDate || "",
+            });
+          }
         }
 
         if (reservRes.ok) {
           const resvData = await reservRes.json();
           setReservations(resvData);
         }
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -254,7 +258,7 @@ export default function DashboardPage() {
                     {user?.email && (
                       <div>
                         <p className="text-[9px] uppercase tracking-[0.2em] text-[#d5b16a]/40 mb-1">Email Address</p>
-                        <p className="text-xs text-[#f3e8c7]/70">{user.email}</p>
+                        <p className="text-xs text-[#f3e8c7]/70">{user?.email}</p>
                       </div>
                     )}
                     
@@ -554,7 +558,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            ) : (
+            )) : (
               /* Reservations View */
               reservations.length === 0 ? (
                 <div className="rounded-3xl border border-[#d5b16a]/10 bg-[#0a0a0a] p-24 text-center">

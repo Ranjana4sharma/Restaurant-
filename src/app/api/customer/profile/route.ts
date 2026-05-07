@@ -56,7 +56,7 @@ export async function PATCH(request: Request) {
           birthDate,
         },
       },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!updated) {

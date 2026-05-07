@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { Reservation } from "@/lib/models/Reservation";
 import { adminJsonResponse, isAdminSession } from "@/lib/admin-auth";
+import { sendReservationEmail } from "@/lib/mailer";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -26,11 +27,14 @@ export async function PATCH(request: Request, { params }: Params) {
     const doc = await Reservation.findByIdAndUpdate(
       id,
       { status, adminNote: adminNote ?? "" },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
+    
+    // Send notification email (doc.phone contains the email)
+    await sendReservationEmail(doc.phone, status as any, adminNote);
+    
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

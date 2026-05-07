@@ -118,8 +118,8 @@ export function HeroBanner({ images }: Props) {
       <div
         className={[
           "group relative overflow-hidden rounded-2xl sm:rounded-3xl",
-          "ring-1 ring-[#e60000]/10 shadow-[0_16px_48px_-20px_rgba(180,20,20,0.35)]",
-          "bg-linear-to-b from-white/80 to-[#fff8f5]",
+          "ring-1 ring-[#d5b16a]/20 shadow-[0_16px_48px_-20px_rgba(213,177,106,0.25)]",
+          "bg-gradient-to-b from-[#111111] to-[#050505]",
         ].join(" ")}
         onMouseEnter={bumpPause}
         onFocusCapture={bumpPause}

@@ -8,17 +8,14 @@ import { useCart } from "@/features/cart/cart-context";
 import { useAuth } from "@/features/auth/auth-context";
 import { fetchNavbar, type NavbarDTO } from "@/services/navbar";
 import { WavySeparator } from "./WavySeparator";
-import { LoginModal } from "../modals/LoginModal";
-import { logoutCustomer } from "@/services/customer";
 
 export function Navbar({ onCartClick }: { onCartClick?: () => void }) {
   const { itemCount } = useCart();
-  const { isLoggedIn, logout, refresh } = useAuth();
+  const { isLoggedIn, user, logout, refresh, setIsLoginOpen } = useAuth();
   const displayCount = itemCount > 99 ? "99+" : String(itemCount);
 
   const [data, setData] = useState<NavbarDTO | null>(null);
   const [ready, setReady] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const load = useCallback(() => {
     return fetchNavbar()
@@ -45,13 +42,8 @@ export function Navbar({ onCartClick }: { onCartClick?: () => void }) {
   const callPhone = data?.phone.trim() ?? "";
 
   const handleLogout = async () => {
-    try {
-      await logoutCustomer();
-      logout();
-      await refresh();
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+    await logout();
+    window.location.href = "/";
   };
 
   const logoUnopt =
@@ -61,6 +53,7 @@ export function Navbar({ onCartClick }: { onCartClick?: () => void }) {
       logoUrl.startsWith("/uploads"));
 
   return (
+    <>
     <header className="sticky top-0 z-50 bg-[#070707] border-b border-[#d5b16a]/10 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-1 sm:gap-3 sm:px-5 sm:py-2">
         <Link
@@ -112,33 +105,18 @@ export function Navbar({ onCartClick }: { onCartClick?: () => void }) {
         </Link>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
-          {!ready ? (
-            <span
-              className="inline-flex h-8 w-19 shrink-0 animate-pulse rounded-full bg-neutral-200 sm:h-9 md:h-10"
-              aria-hidden
-            />
-          ) : callPhone ? (
-            <a
-              href={`tel:${callPhone.replace(/\s/g, "")}`}
-              className="inline-flex h-8 items-center gap-1 rounded-full bg-gradient-to-r from-[#b38a46] to-[#d5b16a] px-2.5 font-body text-[0.6rem] font-bold uppercase tracking-[0.09em] text-[#050505] shadow-lg shadow-[#d5b16a]/10 transition hover:brightness-110 active:translate-y-px active:brightness-95 sm:h-9 sm:gap-1.5 sm:px-4 sm:text-[0.65rem] sm:tracking-widest md:h-10 md:px-5 md:text-xs"
-            >
-              <Phone
-                className="h-[0.9rem] w-[0.9rem] shrink-0 stroke-[2.5] sm:h-4 sm:w-4 md:h-[1.1rem] md:w-[1.1rem]"
-                aria-hidden
-              />
-              Call
-            </a>
-          ) : null}
-
           {ready && (
             <div className="flex items-center gap-1.5 sm:gap-2.5">
-              {isLoggedIn && (
+              {isLoggedIn && user && (
                 <Link
                   href="/dashboard"
-                  className="inline-flex h-8 items-center gap-1 rounded-full bg-[#111111] px-2.5 font-body text-[0.6rem] font-bold uppercase tracking-[0.09em] text-[#d5b16a] ring-1 ring-[#d5b16a]/20 transition hover:bg-[#d5b16a]/10 active:translate-y-px sm:h-9 sm:gap-1.5 sm:px-4 sm:text-[0.65rem] sm:tracking-widest md:h-10 md:px-5 md:text-xs"
+                  className="inline-flex h-8 items-center gap-1 rounded-full bg-[#111111] px-2.5 font-body text-[0.6rem] font-bold uppercase tracking-[0.09em] text-[#d5b16a] ring-1 ring-[#d5b16a]/20 transition hover:bg-[#d5b16a]/10 active:translate-y-px sm:h-9 sm:gap-2 sm:px-4 sm:text-[0.65rem] sm:tracking-widest md:h-10 md:px-5 md:text-xs"
                 >
                   <User className="h-[0.9rem] w-[0.9rem] shrink-0 stroke-[2.5] sm:h-4 sm:w-4 md:h-[1.1rem] md:w-[1.1rem]" />
-                  Orders
+                  <span className="hidden sm:inline">Orders</span>
+                  <div className="flex items-center gap-1 bg-[#d5b16a]/10 px-1.5 py-0.5 rounded-full border border-[#d5b16a]/20">
+                    <span className="text-[8px] sm:text-[10px] text-[#f5d79e]">{user.completionPercentage}%</span>
+                  </div>
                 </Link>
               )}
               {isLoggedIn ? (
@@ -176,7 +154,7 @@ export function Navbar({ onCartClick }: { onCartClick?: () => void }) {
           </button>
         </div>
       </div>
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </header>
+    </>
   );
 }

@@ -30,12 +30,16 @@ const notoDevanagari = Noto_Sans_Devanagari({
   weight: ["500", "600"],
   variable: "--font-noto-devanagari",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
   title: "The Royal Platter",
   description: "Experience pure veg excellence with our curated fine dining menu.",
 };
+
+import { NextAuthProvider } from "@/providers/next-auth-provider";
+import { GlobalModals } from "@/components/modals/GlobalModals";
 
 export default function RootLayout({
   children,
@@ -48,10 +52,40 @@ export default function RootLayout({
       className={`${pacifico.variable} ${dmSans.variable} ${fredoka.variable} ${notoDevanagari.variable} h-full antialiased`}
     >
       <body className="min-h-dvh font-body">
-        <Toaster position="top-center" toastOptions={{ duration: 4000, style: { background: '#333', color: '#fff' } }} />
-        <AuthProvider>
-          <CartProvider>{children}</CartProvider>
-        </AuthProvider>
+        <Toaster position="top-center" toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#0a0a0a',
+            color: '#f5d79e',
+            border: '1px solid rgba(213, 177, 106, 0.3)',
+            borderRadius: '16px',
+            fontSize: '14px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
+          },
+          success: {
+            iconTheme: {
+              primary: '#d5b16a',
+              secondary: '#0a0a0a',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#0a0a0a',
+            },
+            style: {
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+            }
+          }
+        }} />
+        <NextAuthProvider>
+          <AuthProvider>
+            <CartProvider>
+              <GlobalModals />
+              {children}
+            </CartProvider>
+          </AuthProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

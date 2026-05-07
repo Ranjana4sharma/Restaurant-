@@ -93,7 +93,7 @@ export function MenuView() {
   const [confirmationData, setConfirmationData] = useState<{
     orderNumber: string;
     customerName: string;
-    customerPhone: string;
+    customerEmail: string;
     customerAddress: string;
   } | null>(null);
   const router = useRouter();
@@ -342,7 +342,7 @@ export function MenuView() {
 
   const handleCheckoutSubmit = async (data: {
     customerName: string;
-    customerPhone: string;
+    customerEmail: string;
     customerAddress: string;
   }) => {
     const items = lines.map((l) => ({
@@ -351,7 +351,12 @@ export function MenuView() {
       quantity: l.quantity,
       price: l.price,
     }));
-    const order = await placeOrder({ items, ...data });
+    const order = await placeOrder({ 
+      items, 
+      customerName: data.customerName,
+      customerPhone: data.customerEmail,
+      customerAddress: data.customerAddress
+    });
     const id = order.orderNumber;
     clear();
     setCartOpen(false);
@@ -360,7 +365,7 @@ export function MenuView() {
       setConfirmationData({
         orderNumber: id,
         customerName: data.customerName,
-        customerPhone: data.customerPhone,
+        customerEmail: data.customerEmail,
         customerAddress: data.customerAddress,
       });
       setConfirmationOpen(true);
@@ -381,9 +386,9 @@ export function MenuView() {
         <main className="mx-auto w-full max-w-6xl flex-1 px-2.5 py-2 sm:px-3 sm:py-3 md:px-6 md:py-4 flex flex-col items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="relative h-12 w-12">
-              <div className="absolute inset-0 rounded-full border-4 border-[#e60000]/20 border-t-[#e60000] animate-spin"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-[#d5b16a]/20 border-t-[#d5b16a] animate-spin"></div>
             </div>
-            <p className="text-sm text-neutral-600">Loading menu…</p>
+            <p className="text-sm text-[#d5b16a]/60 font-serif">Loading menu…</p>
           </div>
         </main>
         <Footer />
@@ -392,7 +397,7 @@ export function MenuView() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[#faf8f5]">
+    <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[#050505]">
       <Navbar onCartClick={() => setCartOpen(true)} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-2.5 py-2 sm:px-3 sm:py-3 md:px-6 md:py-4 flex flex-col">
@@ -405,7 +410,7 @@ export function MenuView() {
           </label>
           <div className="relative">
             <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-[#b91c1c]/50"
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-[#d5b16a]/50"
               aria-hidden
             />
             <input
@@ -415,7 +420,7 @@ export function MenuView() {
               placeholder="Search for dishes…"
               value={dishSearch}
               onChange={(e) => setDishSearch(e.target.value)}
-              className="font-body w-full rounded-xl border border-white/90 bg-white py-2.5 pl-10 pr-4 text-sm text-neutral-800 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)] outline-none ring-[#e60000]/20 placeholder:text-neutral-400 focus:border-[#e60000]/35 focus:ring-2"
+              className="font-body w-full rounded-xl border border-[#d5b16a]/20 bg-[#111111] py-2.5 pl-10 pr-4 text-sm text-[#f3e8c7] shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] outline-none ring-[#d5b16a]/20 placeholder:text-[#d5b16a]/40 focus:border-[#d5b16a]/35 focus:ring-2"
             />
           </div>
         </div>
@@ -438,9 +443,9 @@ export function MenuView() {
                 }
                 type="button"
                 onClick={() => scrollToSection(item.id)}
-                className="flex min-w-36 max-w-48 shrink-0 items-center gap-1 rounded-lg border border-white/80 bg-white px-2 py-1.5 text-left shadow-[0_5px_20px_-10px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_26px_-10px_rgba(230,0,0,0.16)] sm:min-w-44 sm:max-w-52 sm:gap-1.5 sm:rounded-xl sm:px-2.5 sm:py-2 md:gap-2 md:min-w-48"
+                className="flex min-w-36 max-w-48 shrink-0 items-center gap-1 rounded-lg border border-[#d5b16a]/20 bg-[#111111] px-2 py-1.5 text-left shadow-[0_5px_20px_-10px_rgba(0,0,0,0.5)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_26px_-10px_rgba(213,177,106,0.16)] sm:min-w-44 sm:max-w-52 sm:gap-1.5 sm:rounded-xl sm:px-2.5 sm:py-2 md:gap-2 md:min-w-48"
               >
-                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#fdf6e8] ring-2 ring-[#e60000]/15 sm:h-9 sm:w-9 md:h-10 md:w-10">
+                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#0a0a0a] ring-2 ring-[#d5b16a]/15 sm:h-9 sm:w-9 md:h-10 md:w-10">
                   {item.image ? (
                     <Image
                       src={item.image.startsWith("http") ? item.image : item.image}
@@ -459,7 +464,7 @@ export function MenuView() {
                     />
                   )}
                 </span>
-                <span className="font-body text-[11px] font-extrabold uppercase leading-tight text-[#b91c1c] sm:text-xs">
+                <span className="font-body text-[11px] font-extrabold uppercase leading-tight text-[#d5b16a] sm:text-xs">
                   {item.name}
                 </span>
               </button>
@@ -473,7 +478,7 @@ export function MenuView() {
 
         {!loading && !error && latestAdditions.length > 0 && (
           <section className="mb-4 sm:mb-6">
-            <h2 className="mb-2 text-lg font-extrabold text-[#b91c1c]">Latest Additions</h2>
+            <h2 className="mb-2 text-lg font-extrabold text-[#d5b16a]">Latest Additions</h2>
             <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
               {latestAdditions.map((p) => (
                 <div key={`latest-${p._id}`} className="w-[18.5rem] shrink-0 sm:w-[20rem]">
@@ -486,7 +491,7 @@ export function MenuView() {
 
         {!loading && !error && mostDemanded.length > 0 && (
           <section className="mb-4 sm:mb-6">
-            <h2 className="mb-2 text-lg font-extrabold text-[#b91c1c]">Most Demanded</h2>
+            <h2 className="mb-2 text-lg font-extrabold text-[#d5b16a]">Most Demanded</h2>
             <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
               {mostDemanded.map((p) => (
                 <div key={`demand-${p._id}`} className="w-[18.5rem] shrink-0 sm:w-[20rem]">
@@ -499,28 +504,28 @@ export function MenuView() {
 
         {!loading && !error && approvedReviews.length > 0 && (
           <section className="mb-5 sm:mb-7">
-            <h2 className="mb-2 text-lg font-extrabold text-[#b91c1c]">Customer Reviews</h2>
+            <h2 className="mb-2 text-lg font-extrabold text-[#d5b16a]">Customer Reviews</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {approvedReviews.map((review) => (
                 <article
                   key={review._id}
-                  className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm"
+                  className="rounded-xl border border-[#d5b16a]/20 bg-[#111111] p-3 shadow-sm"
                 >
-                  <p className="text-sm font-bold text-neutral-900">{review.customerName}</p>
-                  <p className="mt-1 text-xs text-amber-600">
+                  <p className="text-sm font-bold text-[#f5d79e]">{review.customerName}</p>
+                  <p className="mt-1 text-xs text-[#d5b16a]">
                     {"★".repeat(review.rating)}
                     {"☆".repeat(Math.max(0, 5 - review.rating))}
                   </p>
-                  <p className="mt-2 text-sm text-neutral-700">{review.comment}</p>
+                  <p className="mt-2 text-sm text-[#f3e8c7]/70">{review.comment}</p>
                 </article>
               ))}
             </div>
           </section>
         )}
         {!loading && !error && (
-          <section className="mb-5 rounded-xl border border-neutral-200 bg-white p-4 sm:mb-7">
-            <h2 className="text-lg font-extrabold text-[#b91c1c]">Share Your Review</h2>
-            <p className="mt-1 text-xs text-neutral-600">
+          <section className="mb-5 rounded-xl border border-[#d5b16a]/20 bg-[#111111] p-4 sm:mb-7">
+            <h2 className="text-lg font-extrabold text-[#d5b16a]">Share Your Review</h2>
+            <p className="mt-1 text-xs text-[#d5b16a]/60">
               Your review will appear publicly after admin approval.
             </p>
             <form
@@ -551,13 +556,13 @@ export function MenuView() {
                 required
                 value={reviewName}
                 onChange={(e) => setReviewName(e.target.value)}
-                className="rounded-lg border px-3 py-2 text-sm"
+                className="rounded-lg border border-[#d5b16a]/20 bg-[#0a0a0a] text-[#f3e8c7] px-3 py-2 text-sm focus:border-[#d5b16a] focus:outline-none"
                 placeholder="Your name"
               />
               <select
                 value={reviewRating}
                 onChange={(e) => setReviewRating(e.target.value)}
-                className="rounded-lg border px-3 py-2 text-sm"
+                className="rounded-lg border border-[#d5b16a]/20 bg-[#0a0a0a] text-[#f3e8c7] px-3 py-2 text-sm focus:border-[#d5b16a] focus:outline-none"
               >
                 <option value="5">5 stars</option>
                 <option value="4">4 stars</option>
@@ -569,25 +574,25 @@ export function MenuView() {
                 required
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value)}
-                className="sm:col-span-2 min-h-20 rounded-lg border px-3 py-2 text-sm"
+                className="sm:col-span-2 min-h-20 rounded-lg border border-[#d5b16a]/20 bg-[#0a0a0a] text-[#f3e8c7] px-3 py-2 text-sm focus:border-[#d5b16a] focus:outline-none"
                 placeholder="Write your feedback"
               />
               <div className="sm:col-span-2 flex items-center gap-3">
                 <button
                   disabled={reviewSubmitting}
-                  className="rounded-full bg-[#e60000] px-5 py-2 text-xs font-bold text-white disabled:opacity-60"
+                  className="rounded-full bg-gradient-to-r from-[#b38a46] to-[#d5b16a] px-5 py-2 text-xs font-bold text-black uppercase tracking-widest shadow-lg shadow-[#d5b16a]/20 disabled:opacity-60 transition hover:brightness-110 active:scale-95"
                   type="submit"
                 >
                   {reviewSubmitting ? "Submitting..." : "Submit Review"}
                 </button>
-                {reviewMsg ? <p className="text-xs text-neutral-600">{reviewMsg}</p> : null}
+                {reviewMsg ? <p className="text-xs text-[#d5b16a]">{reviewMsg}</p> : null}
               </div>
             </form>
           </section>
         )}
 
         {!loading && !error && orderedSections.length === 0 && dishSearch.trim() && (
-          <p className="py-12 text-center font-body text-sm text-neutral-500">
+          <p className="py-12 text-center font-body text-sm text-[#d5b16a]/60">
             No dishes match &ldquo;{dishSearch.trim()}&rdquo;. Try another name.
           </p>
         )}
@@ -651,7 +656,7 @@ export function MenuView() {
           open={confirmationOpen}
           orderNumber={confirmationData.orderNumber}
           customerName={confirmationData.customerName}
-          customerPhone={confirmationData.customerPhone}
+          customerEmail={confirmationData.customerEmail}
           customerAddress={confirmationData.customerAddress}
           onClose={() => {
             setConfirmationOpen(false);

@@ -7,7 +7,7 @@ import { getCustomerSession } from "@/lib/customer-auth";
 export async function GET() {
   const session = await getCustomerSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ profile: null }, { status: 200 });
   }
 
   try {
@@ -20,7 +20,8 @@ export async function GET() {
     const orders = await Order.find({ 
       $or: [
         { customerId: customer._id },
-        { customerPhone: customer.phone }
+        { customerPhone: customer.phone },
+        { customerPhone: customer.email }
       ]
     }).sort({ createdAt: -1 }).lean();
 

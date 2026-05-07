@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       _id: { $in: ids },
       $or: [
         { customerId: session.customerId },
-        { customerPhone: session.phone }
+        { customerPhone: session.email }
       ]
     });
 

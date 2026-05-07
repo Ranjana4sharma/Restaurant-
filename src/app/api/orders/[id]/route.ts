@@ -68,7 +68,7 @@ export async function PUT(request: Request, { params }: Params) {
     const doc = await Order.findByIdAndUpdate(
       id,
       { status },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(toDTO(doc));

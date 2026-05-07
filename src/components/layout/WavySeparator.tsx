@@ -2,7 +2,7 @@
 export function WavySeparator() {
   return (
     <div
-      className="pointer-events-none flex w-full justify-center bg-white leading-none text-[#D30000]"
+      className="pointer-events-none flex w-full justify-center bg-[#070707] leading-none text-[#d5b16a]/30"
       aria-hidden
     >
       <svg

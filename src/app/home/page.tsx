@@ -101,6 +101,8 @@ function slugifyCategory(name: string): string {
 import { useAuth } from "@/features/auth/auth-context";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
+import { CheckoutAuthOverlay } from "@/components/auth/CheckoutAuthOverlay";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
@@ -109,7 +111,9 @@ import { LoginModal } from "@/components/modals/LoginModal";
 import { logoutCustomer } from "@/services/customer";
 import { Navbar } from "@/components/layout/Navbar";
 import { AddToCartModal } from "@/components/modals/AddToCartModal";
+import { CheckoutDetailsModal } from "@/components/modals/CheckoutDetailsModal";
 import ReservationModal from "@/components/modals/ReservationModal";
+import { Footer } from "@/components/layout/Footer";
 
 export default function HomePage() {
   const router = useRouter();
@@ -127,7 +131,23 @@ export default function HomePage() {
         document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
       }, 500);
     }
-  }, [searchParams]);
+
+    const productId = searchParams.get("productId");
+    if (productId && products.length > 0) {
+      const p = products.find(x => x._id === productId);
+      if (p) {
+        setModalProduct(p);
+        setTimeout(() => {
+          document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+        }, 600);
+      }
+    }
+
+    // Cleanup reservation success reload flag
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("reservation_reloaded");
+    }
+  }, [searchParams, products]);
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [reviews, setReviews] = useState<ReviewDTO[]>([]);
   const [allOffers, setOffers] = useState<OfferDTO[]>([]);
@@ -156,58 +176,10 @@ export default function HomePage() {
   const [modalProduct, setModalProduct] = useState<ProductDTO | null>(null);
   const [showMoreCats, setShowMoreCats] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [checkoutForm, setCheckoutForm] = useState({
-    name: "",
-    phone: "",
-    address: "",
-    pincode: "",
-    password: "",
-  });
 
-  const fetchAddressFromPincode = async (pin: string) => {
-    if (pin.length !== 6) return;
-    try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
-      const data = await res.json();
-      if (data && data[0].Status === "Success") {
-        const postOffice = data[0].PostOffice[0];
-        setCheckoutForm(prev => ({
-          ...prev,
-          address: prev.address ? `${prev.address}, ${postOffice.Name}, ${postOffice.District}, ${postOffice.State}` : `${postOffice.Name}, ${postOffice.District}, ${postOffice.State}`
-        }));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const fetchCurrentLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
-          const data = await res.json();
-          if (data && data.display_name) {
-            setCheckoutForm(prev => ({ ...prev, address: data.display_name }));
-            if (data.address && data.address.postcode) {
-              setCheckoutForm(prev => ({ ...prev, pincode: data.address.postcode }));
-            }
-          }
-        } catch (e) {
-          console.error(e);
-          toast.error("Could not fetch address");
-        }
-      }, () => {
-        toast.error("Location permission denied");
-      });
-    } else {
-      toast.error("Geolocation is not supported by your browser");
-    }
-  };
-
-  const { isLoggedIn, user, refresh, logout } = useAuth();
+  const { isLoggedIn, user, refresh, logout, setIsLoginOpen } = useAuth();
   const { lines, subtotal, itemCount, appliedOffer, setOffer, removeOffer, clear, addLine, inc, dec, remove } = useCart();
+
 
   // Auto-apply offer
   useEffect(() => {
@@ -219,26 +191,17 @@ export default function HomePage() {
     }
   }, [subtotal, allOffers, appliedOffer, setOffer, removeOffer]);
 
-  const handleCheckout = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleCheckout = async (formData: { customerName: string; customerEmail: string; customerAddress: string }) => {
     setCheckoutLoading(true);
     try {
       const payload: any = {
         items: lines.map(l => ({ productId: l.productId, name: l.name, quantity: l.quantity, price: l.price })),
         offerId: appliedOffer?._id,
+        customerName: formData.customerName,
+        customerEmail: formData.customerEmail,
+        customerAddress: formData.customerAddress,
+        password: "ALREADY_LOGGED_IN", // Required by older API fallback
       };
-
-      if (isLoggedIn && user) {
-        payload.customerName = user.name;
-        payload.customerPhone = user.phone;
-        payload.customerAddress = user.address;
-        payload.password = "ALREADY_LOGGED_IN"; // The API should handle this or we should update it
-      } else {
-        payload.customerName = checkoutForm.name;
-        payload.customerPhone = checkoutForm.phone;
-        payload.customerAddress = `${checkoutForm.address}${checkoutForm.pincode ? ` - ${checkoutForm.pincode}` : ''}`;
-        payload.password = checkoutForm.password;
-      }
 
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -258,7 +221,7 @@ export default function HomePage() {
         toast.error(data.error || "Checkout failed. Please check your details.");
       }
     } catch (e) {
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     } finally {
       setCheckoutLoading(false);
     }
@@ -323,7 +286,7 @@ export default function HomePage() {
 
   const currentSubCategories = useMemo(() => {
     if (selectedCategory === "all") return [];
-    
+
     const selectedDoc = activeCategories.find((c) => slugifyCategory(c.name) === selectedCategory);
     if (!selectedDoc) return [];
 
@@ -349,8 +312,8 @@ export default function HomePage() {
           if (subDoc) {
             const descendantIds = new Set([subDoc._id, ...getAllDescendantIds(subDoc._id, activeCategories)]);
             list = list.filter(
-              (p) => (p.categoryId && descendantIds.has(p.categoryId)) || 
-                     slugifyCategory(p.category) === selectedSubCategory
+              (p) => (p.categoryId && descendantIds.has(p.categoryId)) ||
+                slugifyCategory(p.category) === selectedSubCategory
             );
           }
         } else {
@@ -358,8 +321,8 @@ export default function HomePage() {
           if (mainDoc) {
             const descendantIds = new Set([mainDoc._id, ...getAllDescendantIds(mainDoc._id, activeCategories)]);
             list = list.filter(
-              (p) => (p.categoryId && descendantIds.has(p.categoryId)) || 
-                     slugifyCategory(p.category) === selectedCategory
+              (p) => (p.categoryId && descendantIds.has(p.categoryId)) ||
+                slugifyCategory(p.category) === selectedCategory
             );
           }
         }
@@ -480,13 +443,13 @@ export default function HomePage() {
           <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#d5b16a]">Pure Veg Excellence</p>
           <h1 className="mt-2 font-serif text-3xl text-[#f5d79e] sm:text-4xl">The Royal Platter</h1>
           <div className="mt-8 flex items-center justify-center gap-4">
-            <button 
+            <button
               onClick={() => { document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" }); }}
               className="flex items-center gap-2 rounded-full border border-[#d5b16a]/40 bg-transparent px-8 py-3 text-xs font-bold uppercase tracking-widest text-[#d5b16a] transition-all hover:bg-[#d5b16a]/10"
             >
               Order Online
             </button>
-            <button 
+            <button
               onClick={() => setReservationOpen(true)}
               className="flex items-center gap-2 rounded-full bg-[#d5b16a] px-8 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_10px_30px_rgba(213,177,106,0.3)] transition-all hover:bg-[#f5d79e]"
             >
@@ -568,16 +531,15 @@ export default function HomePage() {
             </div>
           )}
         </div>
-        
+
         {currentSubCategories.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-2 animate-[fadeIn_0.3s_ease-out]">
             <button
               onClick={() => setSelectedSubCategory("all")}
-              className={`shrink-0 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-                selectedSubCategory === "all"
-                  ? "border-[#d5b16a] bg-[#d5b16a] text-[#050505] shadow-[0_0_10px_rgba(213,177,106,0.3)]"
-                  : "border-[#d5b16a]/30 bg-transparent text-[#d5b16a] hover:bg-[#d5b16a]/10"
-              }`}
+              className={`shrink-0 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${selectedSubCategory === "all"
+                ? "border-[#d5b16a] bg-[#d5b16a] text-[#050505] shadow-[0_0_10px_rgba(213,177,106,0.3)]"
+                : "border-[#d5b16a]/30 bg-transparent text-[#d5b16a] hover:bg-[#d5b16a]/10"
+                }`}
             >
               All {categoryTabs.find((t) => t.slug === selectedCategory)?.label}
             </button>
@@ -588,11 +550,10 @@ export default function HomePage() {
                 <button
                   key={sub._id}
                   onClick={() => setSelectedSubCategory(subSlug)}
-                  className={`shrink-0 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-                    active
-                      ? "border-[#d5b16a] bg-[#d5b16a] text-[#050505] shadow-[0_0_10px_rgba(213,177,106,0.3)]"
-                      : "border-[#d5b16a]/30 bg-transparent text-[#d5b16a] hover:bg-[#d5b16a]/10"
-                  }`}
+                  className={`shrink-0 rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${active
+                    ? "border-[#d5b16a] bg-[#d5b16a] text-[#050505] shadow-[0_0_10px_rgba(213,177,106,0.3)]"
+                    : "border-[#d5b16a]/30 bg-transparent text-[#d5b16a] hover:bg-[#d5b16a]/10"
+                    }`}
                 >
                   {sub.name}
                 </button>
@@ -660,7 +621,7 @@ export default function HomePage() {
                       <div className="h-px w-full bg-gradient-to-r from-[#d5b16a]/30 to-transparent" />
                     </div>
                     {hasMore && (
-                      <button 
+                      <button
                         onClick={() => handleSeeMore(section.title)}
                         className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#d5b16a] hover:text-[#f5d79e] transition-colors shrink-0 group/more"
                       >
@@ -703,8 +664,8 @@ export default function HomePage() {
                           <div className="mt-5 flex items-center justify-between gap-4">
                             <div className="flex flex-col">
                               <span className="font-serif text-xl font-bold text-[#f5d79e]">₹ {p.price}</span>
-                              {p.variants?.length > 0 && (
-                                <span className="text-[9px] uppercase tracking-widest text-[#d5b16a]/60">{p.variants.length} Types</span>
+                              {(p.variants?.length ?? 0) > 0 && (
+                                <span className="text-[9px] uppercase tracking-widest text-[#d5b16a]/60">{p.variants?.length} Types</span>
                               )}
                             </div>
                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#d5b16a] text-black shadow-lg shadow-[#d5b16a]/10 transition-transform group-hover:scale-110">
@@ -890,7 +851,6 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-
                 {/* Fixed Action Bar: Just Total and Button */}
                 <div className="pt-4 border-t border-white/5 bg-[#0a0a0a] flex flex-col gap-4">
                   <div className="flex items-end justify-between px-2">
@@ -902,70 +862,18 @@ export default function HomePage() {
                       ₹ {Math.round((subtotal - (appliedOffer ? (appliedOffer.discountType === "percentage" ? Math.min(appliedOffer.maxDiscount || Infinity, Math.round((subtotal * appliedOffer.discountValue) / 100)) : appliedOffer.discountValue) : 0)) * 1.05)}
                     </p>
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={() => isLoggedIn ? handleCheckout() : setCheckoutOpen(true)}
-                    disabled={checkoutLoading}
-                    className="w-full relative group overflow-hidden rounded-2xl bg-gradient-to-r from-[#b38a46] to-[#d5b16a] py-4.5 text-xs font-bold uppercase tracking-[0.3em] text-[#050505] shadow-[0_20px_40px_rgba(179,138,70,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  <button
+                    type="button"
+                    onClick={() => setCheckoutOpen(true)}
+                    disabled={checkoutLoading || lines.length === 0}
+                    className="w-full relative group overflow-hidden rounded-2xl bg-gradient-to-r from-[#b38a46] to-[#d5b16a] py-4.5 text-xs font-bold uppercase tracking-[0.3em] text-[#050505] shadow-[0_20px_40px_rgba(179,138,70,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                   >
-                    <span className="relative z-10">{checkoutLoading ? "Preparing Order..." : (isLoggedIn ? "Place Royal Order" : "Proceed to Checkout")}</span>
+                    <span className="relative z-10">{checkoutLoading ? "Preparing Order..." : "Proceed to Checkout"}</span>
                     <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                   </button>
                 </div>
               </>
-            ) : (
-              <>
-                {/* Checkout Row 2: Form */}
-                <div className="overflow-y-auto pr-1 custom-scrollbar py-2">
-                  <form id="checkout-form" onSubmit={handleCheckout} className="space-y-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-widest text-[#d5b16a]/60 font-bold">Delivery Details</p>
-                      <input required value={checkoutForm.name} onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })} placeholder="Full Name" className="w-full rounded-xl border border-[#d5b16a]/20 bg-black/40 p-3 text-sm text-[#f3e8c7] outline-none" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-widest text-[#d5b16a]/60 font-bold">Phone Number</p>
-                      <input required value={checkoutForm.phone} onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })} placeholder="Mobile number" className="w-full rounded-xl border border-[#d5b16a]/20 bg-black/40 p-3 text-sm text-[#f3e8c7] outline-none" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] uppercase tracking-widest text-[#d5b16a]/60 font-bold">Delivery Address</p>
-                        <button type="button" onClick={fetchCurrentLocation} className="text-[10px] uppercase tracking-widest text-[#d5b16a] hover:text-[#f5d79e] font-bold flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                          Use GPS
-                        </button>
-                      </div>
-                      <textarea required value={checkoutForm.address} onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })} placeholder="Full address with landmarks" rows={2} className="w-full rounded-xl border border-[#d5b16a]/20 bg-black/40 p-3 text-sm text-[#f3e8c7] outline-none resize-none" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-widest text-[#d5b16a]/60 font-bold">Pincode</p>
-                      <input value={checkoutForm.pincode} onChange={e => {
-                        const val = e.target.value;
-                        setCheckoutForm({ ...checkoutForm, pincode: val });
-                        if (val.length === 6) fetchAddressFromPincode(val);
-                      }} placeholder="e.g. 110001" className="w-full rounded-xl border border-[#d5b16a]/20 bg-black/40 p-3 text-sm text-[#f3e8c7] outline-none" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase tracking-widest text-[#d5b16a]/60 font-bold">Account Password</p>
-                      <input required type="password" value={checkoutForm.password} onChange={e => setCheckoutForm({ ...checkoutForm, password: e.target.value })} placeholder="Enter password to confirm" className="w-full rounded-xl border border-[#d5b16a]/20 bg-black/40 p-3 text-sm text-[#f3e8c7] outline-none" />
-                    </div>
-                  </form>
-                </div>
-
-                {/* Checkout Row 3: Final Action */}
-                <div className="border-t border-[#d5b16a]/20 pt-4 space-y-4 bg-[#0a0a0a]">
-                  <div className="flex justify-between items-center px-1">
-                    <p className="text-[10px] uppercase tracking-widest text-[#d5b16a]">Total Payable</p>
-                    <p className="font-serif text-3xl text-[#f5d79e]">₹ {Math.round((subtotal - (appliedOffer ? (appliedOffer.discountType === "percentage" ? Math.min(appliedOffer.maxDiscount || Infinity, Math.round((subtotal * appliedOffer.discountValue) / 100)) : appliedOffer.discountValue) : 0)) * 1.05)}</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <button type="button" onClick={() => setCheckoutOpen(false)} className="flex-1 rounded-xl border border-white/10 py-4 text-[10px] font-bold uppercase tracking-widest text-[#f3e8c7]/60">Back</button>
-                    <button form="checkout-form" type="submit" disabled={checkoutLoading} className="flex-[2] rounded-xl bg-gradient-to-r from-[#b38a46] to-[#d5b16a] py-4 text-xs font-bold uppercase tracking-widest text-[#050505] shadow-[0_10px_20px_rgba(179,138,70,0.3)]">
-                      {checkoutLoading ? "Confirming..." : "Place Order Now"}
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+            ) : null}
           </div>
         ) : null}
 
@@ -1038,17 +946,24 @@ export default function HomePage() {
         key={modalProduct ? modalProduct._id : "closed"}
         open={!!modalProduct}
         product={modalProduct}
-        onClose={() => setModalProduct(null)}
+        onClose={() => {
+          setModalProduct(null);
+          // If we came from the landing page via productId, return back
+          if (searchParams.get("productId")) {
+            router.push("/");
+          }
+        }}
       />
 
-      <footer className="mt-72 border-t border-[#d5b16a]/15 px-6 py-8 text-center text-xs uppercase tracking-[0.16em] text-[#d5b16a]/85 sm:mt-4">
-        The Royal Platter
-        <span className="mx-2 text-[#d5b16a]/40">|</span>Pure Veg Premium Dining
-      </footer>
-      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
-      <ReservationModal 
-        isOpen={reservationOpen} 
-        onClose={() => setReservationOpen(false)} 
+      <Footer />
+      <CheckoutDetailsModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        onSubmit={handleCheckout}
+      />
+      <ReservationModal
+        isOpen={reservationOpen}
+        onClose={() => setReservationOpen(false)}
       />
     </main>
   );

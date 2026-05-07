@@ -10,7 +10,7 @@ export async function GET() {
     await connectDB();
     const docs = await Category.find().sort({ sortOrder: 1, name: 1 }).lean();
     const response = NextResponse.json(
-      docs.map((d) => categoryDocToDTO({ ...d, _id: d._id }))
+      docs.map((d) => categoryDocToDTO(d))
     );
     response.headers.set(
       "Cache-Control",
@@ -18,7 +18,7 @@ export async function GET() {
     );
     return response;
   } catch (e) {
-    console.error(e);
+    console.error("API Categories GET Error:", e);
     return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
   }
 }

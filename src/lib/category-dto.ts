@@ -10,14 +10,16 @@ type CategoryLean = {
   updatedAt?: Date;
 };
 
-export function categoryDocToDTO(doc: CategoryLean): CategoryDTO {
+export function categoryDocToDTO(doc: any): CategoryDTO {
   return {
-    _id: doc._id.toString(),
-    name: doc.name,
+    _id: doc._id ? doc._id.toString() : "",
+    name: doc.name || "Unknown",
     sortOrder: doc.sortOrder ?? 0,
     image: doc.image ?? "",
     parentId: doc.parentId ? doc.parentId.toString() : undefined,
-    createdAt: doc.createdAt?.toISOString(),
-    updatedAt: doc.updatedAt?.toISOString(),
+    createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : 
+               (typeof doc.createdAt === 'string' ? doc.createdAt : undefined),
+    updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : 
+               (typeof doc.updatedAt === 'string' ? doc.updatedAt : undefined),
   };
 }

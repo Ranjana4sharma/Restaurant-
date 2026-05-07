@@ -51,7 +51,7 @@ export async function PUT(request: Request, { params }: Params) {
       );
     }
     const doc = await Product.findByIdAndUpdate(id, parsed, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     })
       .populate({ path: "categoryId", select: "name" })

@@ -24,7 +24,7 @@ export async function PUT(request: Request, { params }: Params) {
     const doc = await Reservation.findByIdAndUpdate(
       id,
       { status },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({ ok: true, status: doc.status });

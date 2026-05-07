@@ -6,7 +6,7 @@ import { getCustomerSession } from "@/lib/customer-auth";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getCustomerSession();
   if (!session) {
@@ -15,12 +15,14 @@ export async function DELETE(
 
   try {
     await connectDB();
+    const resolvedParams = await params;
+    const orderId = resolvedParams.id;
     
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
     }
 
-    const order = await Order.findById(params.id);
+    const order = await Order.findById(orderId);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -29,13 +31,13 @@ export async function DELETE(
     // Security: Ensure user only deletes their own order
     const isOwner = 
       (order.customerId && order.customerId.toString() === session.customerId) ||
-      (order.customerPhone === session.phone);
+      (order.customerPhone === session.email);
 
     if (!isOwner) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    await Order.findByIdAndDelete(params.id);
+    await Order.findByIdAndDelete(orderId);
 
     return NextResponse.json({ ok: true });
   } catch (e) {

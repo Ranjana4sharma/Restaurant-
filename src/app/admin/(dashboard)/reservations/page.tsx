@@ -16,6 +16,8 @@ export default function AdminReservationsPage() {
       const res = await fetch("/api/reservations");
       const data = await res.json();
       setList(data);
+    } catch (err) {
+      console.error("Failed to load reservations:", err);
     } finally {
       setLoading(false);
     }

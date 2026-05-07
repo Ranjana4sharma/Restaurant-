@@ -39,6 +39,7 @@ export type OrderDTO = {
   orderNumber?: string;
   customerId?: string;
   customerName?: string;
+  customerEmail?: string;
   customerPhone?: string;
   customerAddress?: string;
   items: OrderItemDTO[];
@@ -52,6 +53,7 @@ export type OrderDTO = {
 export type PlaceOrderPayload = {
   items: OrderItemDTO[];
   customerName: string;
+  customerEmail?: string;
   customerPhone: string;
   customerAddress: string;
   password?: string;

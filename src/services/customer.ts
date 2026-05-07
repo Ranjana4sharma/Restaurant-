@@ -16,8 +16,15 @@ export async function loginCustomer(identifier: string, password: string) {
 }
 
 export async function logoutCustomer() {
-  const { data } = await http.post("/api/customer/logout", {});
-  return data;
+  const res = await fetch("/api/customer/logout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error("Logout failed");
+  }
+  return res.json();
 }
 
 export async function fetchCustomerProfile(): Promise<CustomerProfile> {

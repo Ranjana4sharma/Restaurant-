@@ -38,7 +38,7 @@ export async function PUT(request: Request) {
     await SiteSettings.findOneAndUpdate(
       { key: KEY },
       { $set: { landingGalleryImages: images } },
-      { upsert: true, new: true, runValidators: true }
+      { upsert: true, returnDocument: "after", runValidators: true }
     );
     return NextResponse.json({ ok: true, images });
   } catch (e) {

@@ -10,6 +10,7 @@ export type OfferDTO = {
   minOrderValue?: number;
   isActive: boolean;
   isAutoApply: boolean;
+  badge?: string;
 };
 
 export async function fetchOffers(): Promise<OfferDTO[]> {

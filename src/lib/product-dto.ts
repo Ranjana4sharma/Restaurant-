@@ -55,7 +55,9 @@ export function toProductDTO(doc: LeanProduct): ProductDTO {
     isSignatureDish: Boolean(doc.isSignatureDish),
     isFamousDish: Boolean(doc.isFamousDish),
     variants: variants.length ? variants : undefined,
-    createdAt: doc.createdAt?.toISOString(),
-    updatedAt: doc.updatedAt?.toISOString(),
+    createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : 
+               (typeof doc.createdAt === 'string' ? doc.createdAt : undefined),
+    updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : 
+               (typeof doc.updatedAt === 'string' ? doc.updatedAt : undefined),
   };
 }

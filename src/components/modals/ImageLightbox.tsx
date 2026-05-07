@@ -21,10 +21,10 @@ export function ImageLightbox({ open, src, alt, onClose }: Props) {
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-4 right-4 z-60 rounded-full bg-white/90 p-2 hover:bg-white transition"
+        className="absolute top-6 right-6 z-60 rounded-full bg-black/40 p-2 text-[#d5b16a] backdrop-blur-md transition hover:bg-[#d5b16a]/10"
         aria-label="Close"
       >
-        <X className="h-6 w-6 text-neutral-900" />
+        <X className="h-6 w-6" />
       </button>
       <div
         className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl"

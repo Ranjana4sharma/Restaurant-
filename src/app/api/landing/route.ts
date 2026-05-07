@@ -94,7 +94,7 @@ export async function GET() {
                 : DEFAULTS.galleryImages,
           },
         },
-        { upsert: true, new: true, runValidators: true }
+        { upsert: true, returnDocument: "after", runValidators: true }
       );
     }
 

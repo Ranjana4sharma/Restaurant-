@@ -11,15 +11,15 @@ export async function POST(request: Request) {
 
     if (!identifier || !password) {
       return NextResponse.json(
-        { error: "Name/Phone and password are required" },
+        { error: "Email and password are required" },
         { status: 400 }
       );
     }
 
-    // Try finding by name or phone
+    // Try finding by email (both in phone and email fields)
     const customer = await Customer.findOne({ 
       $or: [
-        { name: identifier },
+        { email: identifier },
         { phone: identifier }
       ]
     });
@@ -39,7 +39,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return await jsonWithCustomerSession(customer._id.toString(), customer.phone);
+    return await jsonWithCustomerSession(
+      customer._id.toString(),
+      customer.email || customer.phone || ""
+    );
   } catch (error: any) {
     console.error("Login Error:", error);
     return NextResponse.json(

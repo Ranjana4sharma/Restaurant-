@@ -7,6 +7,8 @@ import { fetchCategories } from "@/services/categories";
 import { createReservation } from "@/services/reservations";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { CategoryDTO } from "@/types";
+import toast from "react-hot-toast";
+import { Footer } from "@/components/layout/Footer";
 
 const fallbackLanding: LandingPayload = {
   brandName: "The Royal Platter",
@@ -37,12 +39,11 @@ export default function HomePage() {
   const [data, setData] = useState<LandingPayload>(fallbackLanding);
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [reservationDate, setReservationDate] = useState("");
   const [reservationTime, setReservationTime] = useState("");
   const [guests, setGuests] = useState("2");
   const [notes, setNotes] = useState("");
-  const [reservationMsg, setReservationMsg] = useState<string | null>(null);
   const [reservationSaving, setReservationSaving] = useState(false);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
 
@@ -62,10 +63,14 @@ export default function HomePage() {
     void fetchCategories()
       .then(setCategories)
       .catch(() => {});
+
+    // Cleanup reservation reload flag on mount
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("reservation_reloaded");
+    }
   }, []);
 
   const displayCategories = useMemo(() => {
-    // Only show top-level categories (no parentId)
     const list = categories.length > 0 ? categories.filter(c => !c.parentId) : data.categories;
     return list;
   }, [categories, data.categories]);
@@ -146,9 +151,10 @@ export default function HomePage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {signaturePreview.length > 0
             ? signaturePreview.map((dish, idx) => (
-                <article
-                  key={dish._id}
-                  className="group overflow-hidden rounded-2xl border border-[#d5b16a]/20 bg-[#111111]/80 transition duration-500 hover:border-[#d5b16a]/45 hover:shadow-[0_18px_40px_-20px_rgba(213,177,106,0.65)]"
+                <Link
+                   href={`/home?productId=${dish._id}`}
+                   key={dish._id}
+                  className="group block overflow-hidden rounded-2xl border border-[#d5b16a]/20 bg-[#111111]/80 transition duration-500 hover:border-[#d5b16a]/45 hover:shadow-[0_18px_40px_-20px_rgba(213,177,106,0.65)]"
                 >
                   <div
                     className="h-52 bg-cover bg-center transition duration-700 group-hover:scale-105"
@@ -160,7 +166,7 @@ export default function HomePage() {
                     </span>
                     <h3 className="font-serif text-lg text-[#f7e6bd]">{dish.name}</h3>
                   </div>
-                </article>
+                </Link>
               ))
             : [0, 1, 2, 3].map((card) => (
                 <article
@@ -185,7 +191,7 @@ export default function HomePage() {
               ))}
         </div>
       </section>
-      {/* Categories Section */}
+
       <section className="mx-auto w-full max-w-6xl px-6 pb-18 sm:pb-22">
         <div className="mb-8">
           <p className="text-[11px] uppercase tracking-[0.25em] text-[#d5b16a]/90">Explore our Menu</p>
@@ -222,7 +228,7 @@ export default function HomePage() {
                 className="group/item relative h-48 w-40 sm:w-48 lg:w-56 shrink-0 snap-start overflow-hidden rounded-2xl border border-[#d5b16a]/20 bg-[#111111] transition-all duration-500 hover:border-[#d5b16a]/60 hover:shadow-[0_15px_30px_-10px_rgba(213,177,106,0.4)]"
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover/item:scale-110"
+                  className="absolute inset-0 bg-cover bg-center transition duration-700 group-item:scale-110"
                   style={{ backgroundImage: `url('${cat.image || "/placeholder-food.svg"}')` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
@@ -268,32 +274,43 @@ export default function HomePage() {
             className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
             onSubmit={async (e) => {
               e.preventDefault();
-              setReservationMsg(null);
               setReservationSaving(true);
               try {
-                const p = phone.trim();
-                if (p.length !== 10) {
-                  setReservationMsg("Please enter a valid 10-digit phone number.");
+                const em = email.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(em)) {
+                  toast.error("Please enter a valid email address.");
                   setReservationSaving(false);
                   return;
                 }
                 await createReservation({
                   fullName: fullName.trim(),
-                  phone: "+91" + p,
+                  phone: em, // Send email in the phone field to avoid backend API changes
                   reservationDate,
                   reservationTime,
                   guests: Number(guests),
                   notes: notes.trim(),
                 });
-                setReservationMsg("Reservation request received. Our team will contact you shortly.");
+                
+                toast.success("Reservation request received. We’ll contact you shortly.");
+                
                 setFullName("");
-                setPhone("");
+                setEmail("");
                 setReservationDate("");
                 setReservationTime("");
                 setGuests("2");
                 setNotes("");
+
+                // One-time refresh logic
+                setTimeout(() => {
+                  const hasReloaded = sessionStorage.getItem("reservation_reloaded");
+                  if (!hasReloaded) {
+                    sessionStorage.setItem("reservation_reloaded", "true");
+                    window.location.reload();
+                  }
+                }, 2500);
               } catch {
-                setReservationMsg("Unable to submit reservation. Please try again.");
+                toast.error("Unable to submit reservation. Please try again.");
               } finally {
                 setReservationSaving(false);
               }
@@ -306,20 +323,14 @@ export default function HomePage() {
               placeholder="Name"
               className="rounded-xl border border-[#d5b16a]/30 bg-black/35 px-3 py-2.5 text-sm text-[#f3e8c7] outline-none ring-[#d5b16a]/30 focus:ring-2"
             />
-            <div className="relative flex items-center">
-              <span className="absolute left-3 text-sm font-semibold text-[#d5b16a]/60">+91</span>
-              <input
-                required
-                type="tel"
-                value={phone}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setPhone(val);
-                }}
-                placeholder="Phone"
-                className="w-full rounded-xl border border-[#d5b16a]/30 bg-black/35 pl-12 pr-3 py-2.5 text-sm text-[#f3e8c7] outline-none ring-[#d5b16a]/30 focus:ring-2"
-              />
-            </div>
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full rounded-xl border border-[#d5b16a]/30 bg-black/35 px-3 py-2.5 text-sm text-[#f3e8c7] outline-none ring-[#d5b16a]/30 focus:ring-2"
+            />
             <input
               required
               type="date"
@@ -358,7 +369,6 @@ export default function HomePage() {
               >
                 {reservationSaving ? "Submitting..." : "Reserve Table"}
               </button>
-              {reservationMsg ? <p className="text-xs text-[#f3e8c7]/80">{reservationMsg}</p> : null}
             </div>
           </form>
         </div>
@@ -375,6 +385,8 @@ export default function HomePage() {
           Enter Restaurant
         </Link>
       </section>
+
+      <Footer />
 
       <style jsx global>{`
         @keyframes fadeUp {
