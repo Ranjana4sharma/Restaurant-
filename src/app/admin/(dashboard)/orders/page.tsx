@@ -119,7 +119,7 @@ export default function AdminOrdersPage() {
                       ₹ {o.totalAmount}
                     </p>
                   </div>
-                  {(o.customerName || o.customerPhone || o.customerAddress) && (
+                  {(o.customerName || o.customerAddress) && (
                     <div className="mt-2 sm:mt-3 rounded-lg sm:rounded-xl border border-[#d5b16a]/20/80 bg-[#111111] px-2.5 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm">
                       {o.customerName && (
                         <p>
@@ -129,19 +129,7 @@ export default function AdminOrdersPage() {
                           {o.customerName}
                         </p>
                       )}
-                      {o.customerPhone && (
-                        <p className="mt-1">
-                          <span className="font-semibold text-[#d5b16a]/70">
-                            Mobile:{" "}
-                          </span>
-                          <a
-                            href={`tel:${o.customerPhone}`}
-                            className="text-[#e60000] underline-offset-2 hover:underline"
-                          >
-                            {o.customerPhone}
-                          </a>
-                        </p>
-                      )}
+
                       {o.customerAddress && (
                         <p className="mt-1 text-[#f3e8c7]">
                           <span className="font-semibold text-[#d5b16a]/70">

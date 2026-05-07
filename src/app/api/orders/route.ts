@@ -13,7 +13,7 @@ function toDTO(doc: {
   orderNumber?: string | null;
   customerId?: any;
   customerName?: string | null;
-  customerPhone?: string | null;
+
   customerAddress?: string | null;
   items: Array<{
     productId: { toString: () => string };
@@ -32,7 +32,7 @@ function toDTO(doc: {
     orderNumber: doc.orderNumber ?? undefined,
     customerId: doc.customerId?.toString(),
     customerName: doc.customerName ?? undefined,
-    customerPhone: doc.customerPhone ?? undefined,
+
     customerAddress: doc.customerAddress ?? undefined,
     items: doc.items.map(
       (i): OrderItemDTO => ({
@@ -63,7 +63,7 @@ export async function GET() {
         orderNumber: d.orderNumber,
         customerId: d.customerId,
         customerName: d.customerName,
-        customerPhone: d.customerPhone,
+
         customerAddress: d.customerAddress,
         items: d.items.map((i) => ({
           ...i,
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { items, customerName, customerPhone, customerAddress } = body as {
+    const { items, customerName, customerAddress } = body as {
       items?: Array<{
         productId: string;
         name: string;
@@ -95,18 +95,17 @@ export async function POST(request: Request) {
         price: number;
       }>;
       customerName?: string;
-      customerPhone?: string;
+
       customerAddress?: string;
     };
     if (!items?.length) {
       return NextResponse.json({ error: "items required" }, { status: 400 });
     }
     const name = String(customerName ?? "").trim();
-    const phone = String(customerPhone ?? "").trim();
     const address = String(customerAddress ?? "").trim();
-    if (!name || !phone || !address) {
+    if (!name || !address) {
       return NextResponse.json(
-        { error: "Name, mobile and address are required" },
+        { error: "Name and address are required" },
         { status: 400 }
       );
     }
@@ -155,7 +154,7 @@ export async function POST(request: Request) {
       doc = await Order.create({
         orderNumber,
         customerName: name,
-        customerPhone: phone,
+
         customerAddress: address,
         items: items.map((i) => ({
           productId: new mongoose.Types.ObjectId(i.productId),
@@ -177,7 +176,7 @@ export async function POST(request: Request) {
         doc = await Order.create({
           orderNumber,
           customerName: name,
-          customerPhone: phone,
+
           customerAddress: address,
           items: items.map((i) => ({
             productId: new mongoose.Types.ObjectId(i.productId),

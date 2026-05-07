@@ -354,7 +354,7 @@ export function MenuView() {
     const order = await placeOrder({ 
       items, 
       customerName: data.customerName,
-      customerPhone: data.customerEmail,
+
       customerAddress: data.customerAddress
     });
     const id = order.orderNumber;

@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 
 type UserProfile = {
   name: string;
-  phone: string;
+
   address: string;
   email?: string;
   completionPercentage: number;
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser({
           name: session.user.name || "",
           email: session.user.email || "",
-          phone: (session.user as any).phone || "",
+
           address,
           completionPercentage: 50,
         });

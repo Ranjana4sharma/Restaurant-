@@ -36,7 +36,7 @@ export const authOptions: NextAuthOptions = {
               email,
               name: user.name || email.split("@")[0],
               password: `google_${Math.random().toString(36).slice(-10)}`,
-              phone: "", 
+
               address: "Pending details",
             });
           }
@@ -61,7 +61,7 @@ export const authOptions: NextAuthOptions = {
           const dbUser = await Customer.findOne({ email: session.user.email.toLowerCase().trim() });
           if (dbUser) {
             (session.user as any).id = dbUser._id.toString();
-            (session.user as any).phone = dbUser.phone || "";
+
             (session.user as any).address = dbUser.address || "Pending details";
           }
         } catch (error) {

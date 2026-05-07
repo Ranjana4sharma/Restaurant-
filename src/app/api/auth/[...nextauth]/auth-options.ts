@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
               email,
               name: user.name || email.split("@")[0],
               password: `google_${Math.random().toString(36).slice(-10)}`, // Secure placeholder
-              phone: "", 
+
               address: "Pending details",
             });
             console.log("[AUTH_DEBUG] Customer created successfully:", existingUser._id);
@@ -75,7 +75,7 @@ export const authOptions: NextAuthOptions = {
           if (dbUser) {
             console.log("[AUTH_DEBUG] Syncing session with DB user:", dbUser._id);
             (session.user as any).id = dbUser._id.toString();
-            (session.user as any).phone = dbUser.phone || "";
+
             (session.user as any).address = dbUser.address || "Pending details";
           } else {
             console.warn("[AUTH_DEBUG] session user not found in DB:", session.user.email);

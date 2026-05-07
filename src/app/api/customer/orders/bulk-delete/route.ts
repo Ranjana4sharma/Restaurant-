@@ -20,10 +20,7 @@ export async function POST(request: Request) {
     // Security: Only delete orders belonging to this user (by ID or Phone)
     await Order.deleteMany({
       _id: { $in: ids },
-      $or: [
-        { customerId: session.customerId },
-        { customerPhone: session.email }
-      ]
+      customerId: session.customerId
     });
 
     return NextResponse.json({ ok: true });

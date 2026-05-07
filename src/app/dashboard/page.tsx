@@ -130,7 +130,7 @@ export default function DashboardPage() {
             price: item.price
           })),
           customerName: order.customerName,
-          customerPhone: order.customerPhone,
+
           customerAddress: order.customerAddress,
           password: "ALREADY_LOGGED_IN",
         };
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <h2 className="mt-6 font-serif text-3xl text-[#f5d79e]">{user?.name}</h2>
-                  <p className="text-xs text-[#d5b16a]/60 uppercase tracking-widest mt-1">{user?.phone}</p>
+
                   
                   <div className="mt-8 pt-8 border-t border-[#d5b16a]/10 text-left space-y-6">
                     <div>
@@ -633,7 +633,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[#d5b16a]/40 mb-3">Customer Details</p>
                     <p className="text-sm font-bold text-[#f5d79e]">{selectedOrderDetails.customerName}</p>
-                    <p className="text-xs text-[#f3e8c7]/60 mt-1">{selectedOrderDetails.customerPhone}</p>
+
                     <p className="text-xs text-[#f3e8c7]/60 mt-3 leading-relaxed">{selectedOrderDetails.customerAddress}</p>
                   </div>
                   <div>

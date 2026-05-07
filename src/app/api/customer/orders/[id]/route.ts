@@ -30,8 +30,7 @@ export async function DELETE(
 
     // Security: Ensure user only deletes their own order
     const isOwner = 
-      (order.customerId && order.customerId.toString() === session.customerId) ||
-      (order.customerPhone === session.email);
+      (order.customerId && order.customerId.toString() === session.customerId);
 
     if (!isOwner) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

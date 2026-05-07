@@ -8,7 +8,7 @@ function toDTO(doc: {
   _id: { toString: () => string };
   orderNumber?: string | null;
   customerName?: string | null;
-  customerPhone?: string | null;
+
   customerAddress?: string | null;
   items: Array<{
     productId: { toString: () => string };
@@ -25,7 +25,7 @@ function toDTO(doc: {
     _id: doc._id.toString(),
     orderNumber: doc.orderNumber ?? undefined,
     customerName: doc.customerName ?? undefined,
-    customerPhone: doc.customerPhone ?? undefined,
+
     customerAddress: doc.customerAddress ?? undefined,
     items: doc.items.map(
       (i): OrderItemDTO => ({
@@ -66,7 +66,7 @@ export async function GET(_request: Request, { params }: Params) {
       _id: mongoose.Types.ObjectId;
       orderNumber?: string;
       customerName?: string;
-      customerPhone?: string;
+
       customerAddress?: string;
       items: Array<{
         productId: mongoose.Types.ObjectId;
@@ -84,7 +84,7 @@ export async function GET(_request: Request, { params }: Params) {
         _id: d._id,
         orderNumber: d.orderNumber,
         customerName: d.customerName,
-        customerPhone: d.customerPhone,
+
         customerAddress: d.customerAddress,
         items: d.items.map((i) => ({
           ...i,
