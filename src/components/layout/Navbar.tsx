@@ -88,7 +88,7 @@ export function Navbar({ onCartClick }: { onCartClick?: () => void }) {
             ) : (
               <>
                 {brand ? (
-                  <p className="font-serif text-[clamp(1.05rem,3.4vw,1.45rem)] font-bold leading-none tracking-tight text-[#f5d79e] transition-transform duration-200 group-hover:scale-[1.02] sm:text-[clamp(1.15rem,3.6vw,1.6rem)]">
+                  <p className="font-navbar-brand text-[clamp(1.05rem,3.4vw,1.45rem)] font-bold leading-none tracking-tight text-[#f5d79e] transition-transform duration-200 group-hover:scale-[1.02] sm:text-[clamp(1.15rem,3.6vw,1.6rem)]">
                     {brand}
                   </p>
                 ) : (

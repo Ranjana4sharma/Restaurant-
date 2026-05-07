@@ -10,6 +10,7 @@ const pacifico = Pacifico({
   subsets: ["latin"],
   variable: "--font-pacifico",
   display: "swap",
+  preload: false,
 });
 
 const dmSans = DM_Sans({
@@ -23,6 +24,7 @@ const fredoka = Fredoka({
   weight: ["600", "700"],
   variable: "--font-fredoka",
   display: "swap",
+  preload: false,
 });
 
 const notoDevanagari = Noto_Sans_Devanagari({

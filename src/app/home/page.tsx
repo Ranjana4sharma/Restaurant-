@@ -90,6 +90,31 @@ const dummyReviews: ReviewDTO[] = [
   { _id: "r3", customerName: "Vikram Singh", rating: 4, comment: "Loved the Mediterranean platter. Ambience is very royal.", approved: true },
 ];
 
+const dummyOffers: OfferDTO[] = [
+  {
+    _id: "o1",
+    title: "Royal Welcome",
+    description: "Get 20% off on your first order above ₹999",
+    discountValue: 20,
+    discountType: "percentage",
+    minOrderValue: 999,
+    isActive: true,
+    isAutoApply: true,
+    badge: "20% OFF"
+  },
+  {
+    _id: "o2",
+    title: "Weekend Feast",
+    description: "Flat ₹200 off on all orders above ₹1499",
+    discountValue: 200,
+    discountType: "fixed",
+    minOrderValue: 1499,
+    isActive: true,
+    isAutoApply: false,
+    badge: "₹200 OFF"
+  }
+];
+
 function slugifyCategory(name: string): string {
   return name
     .toLowerCase()
@@ -250,7 +275,10 @@ export default function HomePage() {
   const activeCategories = categories.length > 0 ? categories : dummyCategories;
   const activeProducts = (products.length > 0 ? products : dummyProducts).filter((p) => p.isVeg);
   const activeReviews = reviews.length > 0 ? reviews : dummyReviews;
-  const activeOffers = useMemo(() => allOffers.filter((o) => o.isActive), [allOffers]);
+  const activeOffers = useMemo(() => {
+    const list = allOffers.length > 0 ? allOffers : dummyOffers;
+    return list.filter((o) => o.isActive);
+  }, [allOffers]);
 
   useEffect(() => {
     (async () => {
