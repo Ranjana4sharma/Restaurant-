@@ -19,7 +19,6 @@ const orderSchema = new Schema(
     orderNumber: { type: String, unique: true, sparse: true, trim: true },
     customerId: { type: Schema.Types.ObjectId, ref: "Customer" },
     customerName: { type: String, trim: true, default: "" },
-    customerPhone: { type: String, trim: true, default: "" },
     customerAddress: { type: String, trim: true, default: "" },
     items: { type: [orderItemSchema], required: true },
     subtotal: { type: Number, default: 0 },

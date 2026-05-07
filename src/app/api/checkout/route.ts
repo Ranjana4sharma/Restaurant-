@@ -14,8 +14,8 @@ export async function POST(request: Request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { items, customerName, customerEmail, customerPhone, customerAddress, password, offerId } = body;
-    const identityEmail = (customerEmail || customerPhone || "").trim();
+    const { items, customerName, customerEmail, customerAddress, password, offerId } = body;
+    const identityEmail = (customerEmail || "").trim();
 
     let customer = null;
     const session = await getCustomerSession();
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     if (!customer && session?.email) {
-      customer = await Customer.findOne({ $or: [{ email: session.email }, { phone: session.email }] });
+      customer = await Customer.findOne({ email: session.email });
     }
 
     if (!customer) {
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "All fields are required" }, { status: 400 });
       }
 
-      customer = await Customer.findOne({ $or: [{ email: identityEmail }, { phone: identityEmail }] });
+      customer = await Customer.findOne({ email: identityEmail });
       if (customer) {
         const isMatch = await bcrypt.compare(password, customer.password);
         if (!isMatch) {
@@ -43,7 +43,6 @@ export async function POST(request: Request) {
         const hashedPassword = await bcrypt.hash(password, 10);
         customer = await Customer.create({
           name: customerName,
-          phone: identityEmail,
           email: identityEmail,
           address: customerAddress,
           password: hashedPassword,
@@ -150,7 +149,6 @@ export async function POST(request: Request) {
       orderNumber,
       customerId: customer._id,
       customerName: customerName || customer.name,
-      customerPhone: identityEmail || customer.email || customer.phone,
       customerAddress: customerAddress || customer.address,
       items: orderItems,
       subtotal,
@@ -161,14 +159,14 @@ export async function POST(request: Request) {
       status: "pending",
     });
 
-    await sendOrderConfirmationEmail((customer.email || customer.phone || identityEmail) as string, {
+    await sendOrderConfirmationEmail((customer.email || identityEmail) as string, {
       orderId: order.orderNumber || "",
       amount: order.totalAmount,
     });
 
     const response = await jsonWithCustomerSession(
       customer._id.toString(),
-      (customer.email || customer.phone || identityEmail) as string
+      (customer.email || identityEmail) as string
     );
     return NextResponse.json({ 
       ok: true, 

@@ -17,13 +17,7 @@ export async function GET() {
       return NextResponse.json({ error: "Customer not found" }, { status: 404 });
     }
 
-    const orders = await Order.find({ 
-      $or: [
-        { customerId: customer._id },
-        { customerPhone: customer.phone },
-        { customerPhone: customer.email }
-      ]
-    }).sort({ createdAt: -1 }).lean();
+    const orders = await Order.find({ customerId: customer._id }).sort({ createdAt: -1 }).lean();
 
     // Initials logic
     const initials = customer.name
@@ -34,7 +28,7 @@ export async function GET() {
       .slice(0, 2);
 
     // Calculate profile completion
-    const allFields = ["name", "phone", "address", "email", "gender", "birthDate"];
+    const allFields = ["name", "address", "email", "gender", "birthDate"];
     const filledFields = allFields.filter((f) => !!(customer as any)[f]);
     const missingFields = allFields.filter((f) => !(customer as any)[f]);
     const completionPercentage = Math.round((filledFields.length / allFields.length) * 100);
@@ -43,7 +37,6 @@ export async function GET() {
       profile: {
         name: customer.name,
         initials,
-        phone: customer.phone,
         address: customer.address,
         email: customer.email,
         gender: customer.gender,

@@ -4,7 +4,6 @@ const customerSchema = new Schema(
   {
     name: { type: String, trim: true, required: true },
     email: { type: String, trim: true, required: true, unique: true },
-    phone: { type: String, trim: true },
     address: { type: String, trim: true },
     gender: { type: String, enum: ["male", "female", "other"] },
     birthDate: { type: String },

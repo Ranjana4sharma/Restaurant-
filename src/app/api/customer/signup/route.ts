@@ -36,7 +36,6 @@ export async function POST(req: Request) {
       email,
       password: hashedPassword,
       name: name || email.split("@")[0],
-      phone: "", 
       address: address || "", 
     });
 

@@ -153,7 +153,7 @@ export function AddToCartModal({ open, product, onClose }: Props) {
                       <button
                         key={o.id}
                         type="button"
-                        onClick={() => setSelectedId(o.id)}
+                        onClick={() => setSelectedId(selected ? null : o.id)}
                         className={`group relative flex flex-col items-start rounded-2xl border p-4 transition-all duration-300 ${
                           selected
                             ? "border-[#d5b16a] bg-[#b38a46]/10 shadow-[0_0_20px_rgba(213,177,106,0.1)]"
@@ -207,7 +207,8 @@ export function AddToCartModal({ open, product, onClose }: Props) {
         <div className="shrink-0 border-t border-[#d5b16a]/10 bg-[#0a0a0a] px-8 py-6">
           <button
             type="button"
-            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-[#b38a46] to-[#d5b16a] py-4 shadow-xl shadow-[#d5b16a]/10 transition-transform active:scale-95"
+            disabled={options.length > 0 && !selectedId}
+            className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-[#b38a46] to-[#d5b16a] py-4 shadow-xl shadow-[#d5b16a]/10 transition-transform active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
             onClick={() => {
               addLine({
                 productId: product._id,

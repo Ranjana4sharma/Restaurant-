@@ -16,13 +16,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Try finding by email (both in phone and email fields)
-    const customer = await Customer.findOne({ 
-      $or: [
-        { email: identifier },
-        { phone: identifier }
-      ]
-    });
+    // Try finding by email
+    const customer = await Customer.findOne({ email: identifier });
 
     if (!customer) {
       return NextResponse.json(
@@ -41,7 +36,7 @@ export async function POST(request: Request) {
 
     return await jsonWithCustomerSession(
       customer._id.toString(),
-      customer.email || customer.phone || ""
+      customer.email || ""
     );
   } catch (error: any) {
     console.error("Login Error:", error);

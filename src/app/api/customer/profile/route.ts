@@ -21,7 +21,6 @@ export async function GET() {
       user: {
         id: customer._id,
         name: customer.name,
-        phone: customer.phone,
         address: customer.address,
         email: customer.email,
         gender: customer.gender,
@@ -67,7 +66,6 @@ export async function PATCH(request: Request) {
       ok: true,
       user: {
         name: updated.name,
-        phone: updated.phone,
         address: updated.address,
         email: updated.email,
         gender: updated.gender,

@@ -3,7 +3,6 @@ import { http } from "./http";
 export interface CustomerProfile {
   id: string;
   name: string;
-  phone: string;
   address: string;
   email?: string;
   gender?: string;

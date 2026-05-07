@@ -129,7 +129,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { CheckoutAuthOverlay } from "@/components/auth/CheckoutAuthOverlay";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 
 import { fetchOffers, type OfferDTO } from "@/services/offers";
 import { LoginModal } from "@/components/modals/LoginModal";
@@ -139,6 +139,7 @@ import { AddToCartModal } from "@/components/modals/AddToCartModal";
 import { CheckoutDetailsModal } from "@/components/modals/CheckoutDetailsModal";
 import ReservationModal from "@/components/modals/ReservationModal";
 import { Footer } from "@/components/layout/Footer";
+import { SubmitReviewModal } from "@/components/modals/SubmitReviewModal";
 
 function HomeContent() {
   const router = useRouter();
@@ -197,6 +198,7 @@ function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [modalProduct, setModalProduct] = useState<ProductDTO | null>(null);
   const [showMoreCats, setShowMoreCats] = useState(false);
@@ -696,7 +698,24 @@ function HomeContent() {
                                 <span className="text-[9px] uppercase tracking-widest text-[#d5b16a]/60">{p.variants?.length} Types</span>
                               )}
                             </div>
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#d5b16a] text-black shadow-lg shadow-[#d5b16a]/10 transition-transform group-hover:scale-110">
+                            <div 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if ((p.variants?.length ?? 0) > 0) {
+                                  setModalProduct(p);
+                                } else {
+                                  addLine({
+                                    productId: p._id,
+                                    name: p.name,
+                                    price: p.price,
+                                    quantity: 1,
+                                    image: p.image,
+                                    isVeg: p.isVeg,
+                                  });
+                                  toast.success(`Added ${p.name} to cart`);
+                                }
+                              }}
+                              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#d5b16a] text-black shadow-lg shadow-[#d5b16a]/10 transition-transform group-hover:scale-110">
                               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                               </svg>
@@ -755,7 +774,24 @@ function HomeContent() {
                 <p className="mt-2 text-sm text-[#f3e8c7]/70 line-clamp-2">{p.description || "An exclusive creation by our master chef, featuring premium hand-picked ingredients."}</p>
                 <div className="mt-6 flex items-center justify-between">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#d5b16a]/60">Click for details</div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#b38a46] text-black shadow-lg shadow-[#b38a46]/20 transition-transform group-hover:scale-110">
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if ((p.variants?.length ?? 0) > 0) {
+                        setModalProduct(p);
+                      } else {
+                        addLine({
+                          productId: p._id,
+                          name: p.name,
+                          price: p.price,
+                          quantity: 1,
+                          image: p.image,
+                          isVeg: p.isVeg,
+                        });
+                        toast.success(`Added ${p.name} to cart`);
+                      }
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#b38a46] text-black shadow-lg shadow-[#b38a46]/20 transition-transform group-hover:scale-110">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
@@ -769,7 +805,16 @@ function HomeContent() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-6 pb-14">
-        <h2 className="font-serif text-3xl text-[#f5d79e]">Guest Experiences</h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-serif text-3xl text-[#f5d79e]">Guest Experiences</h2>
+          <button 
+            onClick={() => setReviewOpen(true)}
+            className="flex items-center gap-2 rounded-full border border-[#d5b16a]/30 bg-[#d5b16a]/5 px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-[#d5b16a] transition-all hover:bg-[#d5b16a] hover:text-black"
+          >
+            <Star size={14} className="fill-current" />
+            Write a Review
+          </button>
+        </div>
         <div className="mt-5 grid gap-5 sm:grid-cols-3">
           {activeReviews.slice(0, 3).map((review) => (
             <div key={review._id} className="rounded-2xl border border-[#d5b16a]/20 bg-[#111111] p-6 transition-all hover:-translate-y-1 hover:border-[#d5b16a]/40">
@@ -843,15 +888,15 @@ function HomeContent() {
                         <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d5b16a]">Royal Offers</p>
                         {appliedOffer && <button onClick={removeOffer} className="text-[10px] font-bold uppercase tracking-widest text-rose-400/60">Remove Applied</button>}
                       </div>
-                      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                      <div className="grid grid-cols-2 gap-3 pb-2">
                         {activeOffers.map(o => (
                           <button
                             key={o._id}
                             onClick={() => subtotal >= (o.minOrderValue || 0) ? setOffer(o) : null}
-                            className={`shrink-0 w-44 rounded-2xl border p-4 transition-all ${appliedOffer?._id === o._id ? 'border-[#d5b16a] bg-[#b38a46]/10 shadow-[0_10px_20px_rgba(213,177,106,0.05)]' : 'border-white/5 bg-white/[0.02] hover:border-white/10'}`}
+                            className={`w-full text-left flex flex-col items-start rounded-2xl border p-4 transition-all ${appliedOffer?._id === o._id ? 'border-[#d5b16a] bg-[#b38a46]/10 shadow-[0_10px_20px_rgba(213,177,106,0.05)]' : 'border-white/5 bg-white/[0.02] hover:border-white/10'}`}
                           >
-                            <p className="text-[11px] font-bold text-[#f3e8c7] truncate">{o.title}</p>
-                            <p className="text-[9px] text-[#f3e8c7]/40 leading-tight mt-1 line-clamp-1">{o.description}</p>
+                            <p className="text-[11px] font-bold text-[#f3e8c7] w-full truncate">{o.title}</p>
+                            <p className="text-[9px] text-[#f3e8c7]/40 leading-tight mt-1 line-clamp-2">{o.description}</p>
                           </button>
                         ))}
                       </div>
@@ -992,6 +1037,10 @@ function HomeContent() {
       <ReservationModal
         isOpen={reservationOpen}
         onClose={() => setReservationOpen(false)}
+      />
+      <SubmitReviewModal 
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
       />
     </main>
   );
